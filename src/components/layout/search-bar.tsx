@@ -70,16 +70,43 @@ export function SearchBar() {
 
   const handleSelectLocation = (loc: SearchResultLocation) => {
     setOpen(false);
-    setQuery("");
-    router.push(`/map?lat=${loc.lat}&lng=${loc.lon}`);
+    const shortName = loc.displayName.split(",")[0] || loc.displayName;
+    router.push(
+      `/map?lat=${loc.lat}&lng=${loc.lon}&name=${encodeURIComponent(shortName)}`
+    );
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    setOpen(false);
+
+    // If matching problems exist, redirect directly to the specified problem page
+    if (problems.length > 0) {
+      router.push(`/problems/${problems[0].id}`);
+      return;
+    }
+
+    // If location matches exist, open map centered on that location
+    if (locations.length > 0) {
+      const topLoc = locations[0];
+      const shortName = topLoc.displayName.split(",")[0] || topLoc.displayName;
+      router.push(
+        `/map?lat=${topLoc.lat}&lng=${topLoc.lon}&name=${encodeURIComponent(shortName)}`
+      );
+      return;
+    }
+
+    // Fallback: search query on map
+    router.push(`/map?q=${encodeURIComponent(query.trim())}`);
   };
 
   return (
     <div ref={containerRef} className="relative w-full max-w-md hidden sm:block">
-      <label htmlFor="global-search" className="sr-only">
-        Search problems or locations
-      </label>
-      <div className="relative">
+      <form onSubmit={handleFormSubmit} className="relative">
+        <label htmlFor="global-search" className="sr-only">
+          Search problems or locations
+        </label>
         <Search
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
           aria-hidden="true"
@@ -102,6 +129,7 @@ export function SearchBar() {
 
         {!loading && query && (
           <button
+            type="button"
             onClick={() => {
               setQuery("");
               setOpen(false);
@@ -111,7 +139,7 @@ export function SearchBar() {
             <X className="h-4 w-4" />
           </button>
         )}
-      </div>
+      </form>
 
       {/* Auto-complete Dropdown Menu */}
       {open && (problems.length > 0 || locations.length > 0) && (

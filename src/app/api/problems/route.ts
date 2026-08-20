@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
     const rl = await checkRateLimit(session.user.id, RateLimits.createProblem);
     if (!rl.allowed) {
       return Response.json(
-        { error: "You have posted too many problems recently. Please wait before posting again." },
+        { error: "You have reached your daily limit of 10 problem posts per day. Please try again tomorrow." },
         { status: 429 }
       );
     }

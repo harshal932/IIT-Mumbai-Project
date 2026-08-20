@@ -78,6 +78,14 @@ function RegisterForm() {
       return;
     }
 
+    if (password.length < 8 || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      toast.error(
+        "Weak Password",
+        "Password must be at least 8 characters with at least 1 uppercase letter, 1 lowercase letter, and 1 number."
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/users", {
@@ -178,15 +186,20 @@ function RegisterForm() {
           )}
         </div>
 
-        <Input
-          type="password"
-          label="Password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={6}
-        />
+        <div>
+          <Input
+            type="password"
+            label="Password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={8}
+          />
+          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 pl-1">
+            Must be at least 8 characters with uppercase, lowercase, and a number.
+          </p>
+        </div>
 
         <Input
           type="password"
@@ -195,7 +208,7 @@ function RegisterForm() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          minLength={6}
+          minLength={8}
         />
 
         <Button

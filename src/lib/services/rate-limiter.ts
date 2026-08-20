@@ -63,12 +63,12 @@ export function getClientIp(req: Request): string {
 }
 
 export const RateLimits = {
-  createProblem: { limit: 5, windowSecs: 3600, prefix: "rl:problem" },
+  createProblem: { limit: 10, windowSecs: 86400, prefix: "rl:problem" },
   createComment: { limit: 20, windowSecs: 3600, prefix: "rl:comment" },
   verifyProblem: { limit: 10, windowSecs: 3600, prefix: "rl:verify" },
   helpOffer: { limit: 10, windowSecs: 3600, prefix: "rl:help" },
   createHelpOffer: { limit: 10, windowSecs: 3600, prefix: "rl:help" },
-  register: { limit: 5, windowSecs: 3600, prefix: "rl:register" },
+  register: { limit: 30, windowSecs: 3600, prefix: "rl:register" },
   report: { limit: 5, windowSecs: 3600, prefix: "rl:report" },
   createReport: { limit: 5, windowSecs: 3600, prefix: "rl:report" },
 } as const;

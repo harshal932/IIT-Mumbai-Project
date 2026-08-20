@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { Alert } from "@/components/ui/alert";
 import { MapPin, CheckSquare, Upload, X, Loader2 } from "lucide-react";
 import { reverseGeocode } from "@/lib/services/geocoding";
+import { useLocation } from "@/components/location/location-provider";
 import type { ProblemUrgency, ProblemType, HelpType } from "@/lib/types";
 
 const CATEGORIES = [
@@ -57,34 +58,56 @@ export function ProblemForm() {
     );
   };
 
-  const handleLocateMe = async () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser.");
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const latitude = pos.coords.latitude;
-        const longitude = pos.coords.longitude;
-        setLat(latitude);
-        setLng(longitude);
+  const { userLocation, requestLocationPermission } = useLocation();
 
-        try {
-          const address = await reverseGeocode(latitude, longitude);
-          setLocationArea(address);
-          toast.success("Location acquired!", address);
-        } catch {
-          setLocationArea(`Near ${latitude.toFixed(3)}, ${longitude.toFixed(3)}`);
-        } finally {
+  const handleLocateMe = async () => {
+    setLocating(true);
+
+    try {
+      let targetLat = userLocation?.lat;
+      let targetLng = userLocation?.lng;
+
+      if (!targetLat || !targetLng) {
+        if (!navigator.geolocation) {
+          toast.error("Geolocation is not supported by your browser.");
           setLocating(false);
+          return;
         }
-      },
-      () => {
-        toast.error("Could not access GPS location. Default set to NYC.");
-        setLocating(false);
+
+        const success = await requestLocationPermission();
+        if (!success) {
+          // Fallback direct browser attempt with options
+          await new Promise<void>((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                targetLat = pos.coords.latitude;
+                targetLng = pos.coords.longitude;
+                resolve();
+              },
+              () => resolve(),
+              { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+            );
+          });
+        } else if (userLocation) {
+          targetLat = userLocation.lat;
+          targetLng = userLocation.lng;
+        }
       }
-    );
+
+      if (targetLat && targetLng) {
+        setLat(targetLat);
+        setLng(targetLng);
+        const address = await reverseGeocode(targetLat, targetLng);
+        setLocationArea(address);
+        toast.success("Location acquired!", address);
+      } else {
+        toast.error("Could not access GPS location", "Please type your location area manually.");
+      }
+    } catch {
+      toast.error("Location error", "Unable to acquire current position.");
+    } finally {
+      setLocating(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

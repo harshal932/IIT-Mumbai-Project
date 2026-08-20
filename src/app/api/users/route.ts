@@ -22,8 +22,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = RegisterSchema.safeParse(body);
     if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      const firstMsg = Object.values(fieldErrors).flat()[0];
       return Response.json(
-        { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+        { error: firstMsg || "Validation failed", details: fieldErrors },
         { status: 422 }
       );
     }

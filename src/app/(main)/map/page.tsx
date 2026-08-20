@@ -62,7 +62,28 @@ const MOCK_MAP_PROBLEMS: ProblemPublic[] = [
   },
 ];
 
-export default async function MapPage() {
+export default async function MapPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{
+    lat?: string;
+    lng?: string;
+    q?: string;
+    problemId?: string;
+    name?: string;
+  }>;
+}) {
+  const params = (await searchParams) || {};
+  const initialLat = params.lat ? parseFloat(params.lat) : undefined;
+  const initialLng = params.lng ? parseFloat(params.lng) : undefined;
+  const initialCenter: [number, number] | undefined =
+    initialLat !== undefined &&
+    initialLng !== undefined &&
+    !isNaN(initialLat) &&
+    !isNaN(initialLng)
+      ? [initialLat, initialLng]
+      : undefined;
+
   const resultRows = await withDbFallback(
     () =>
       db
@@ -126,16 +147,25 @@ export default async function MapPage() {
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
       <div className="mb-3">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Interactive Community Map
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <span>Interactive Community Map</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-800">
+            5km Perimeter Scan
+          </span>
         </h1>
         <p className="text-xs text-gray-500">
-          Browse issues geographically. Pins are fuzz-protected for resident privacy.
+          Automatically scans a 5km radius perimeter for nearby community issues around your location or any searched city. Pins are fuzz-protected for resident privacy.
         </p>
       </div>
 
       <div className="flex-1 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-2xs">
-        <ProblemMap problems={formattedProblems} />
+        <ProblemMap
+          problems={formattedProblems}
+          initialCenter={initialCenter}
+          initialSearchQuery={params.q}
+          initialProblemId={params.problemId}
+          initialLocationName={params.name}
+        />
       </div>
     </div>
   );

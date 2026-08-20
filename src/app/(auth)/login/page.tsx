@@ -86,6 +86,7 @@ export default function LoginPage() {
       if (res?.error) {
         toast.error("Sign In Failed", "Invalid password or credentials.");
       } else {
+        localStorage.setItem("localloop_trigger_location_prompt", "true");
         toast.success("Welcome back!", emailStatus.name ? `Signed in as ${emailStatus.name}` : undefined);
         router.push("/feed");
         router.refresh();
